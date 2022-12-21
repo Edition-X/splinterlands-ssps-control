@@ -9,7 +9,7 @@
             }
             .container {
                 max-width: 800px;
-                margin: 3% auto 0;
+                margin: 5% auto 0;
                 text-align: center;
                 background-color: rgba(255, 255, 255, 0.8);
                 padding: 32px;
@@ -40,16 +40,69 @@
                 margin: 8px 0;
                 color: #666;
             }
+            .form-control {
+                width: 50%;
+                margin: 16px auto;
+                padding: 12px 20px;
+                box-sizing: border-box;
+                border: 2px solid #ccc;
+                border-radius: 4px;
+            }
+            .alert {
+                padding: 20px;
+                background-color: #f44336;
+                color: white;
+                margin-bottom: 15px;
+                border-radius: 4px;
+                display: none;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>Unstake SPS</h1>
-            <p>Click the button below to start the unstaking process for your SPS tokens.</p>
-            <form method="post">
-                <button class="button" type="submit">Start Unstaking</button>
+            <p>Enter your Hive username and click the button below to start the unstaking process for your SPS tokens.</p>
+            <form id="unstake-form">
+                <input class="form-control" type="text" placeholder="Hive username" name="encode_user" id="encode_user">
+                <button class="button" onclick="sendCustomJson()">Start ReUnstaking</button>
             </form>
+            <div class="alert" id="error-alert">Authentication failed! Please try again.</div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            // Sign the custom JSON object and send it to the server
+            function sendCustomJson() {
+              // Build the custom JSON object
+              const customJson = {
+                "username": $("#encode_user").val(),
+                "app": "reunstaker"
+              };
+              // Sign the custom JSON object
+              window.hive_keychain.requestCustomJson(
+                $("#encode_user").val(),
+                "reunstaker",
+                JSON.stringify(customJson),
+                "Active",
+                function (response) {
+                  // Send the signed custom JSON object to the server
+                  $.ajax({
+                    url: '/authenticate',
+                    type: 'POST',
+                    data: {
+                      "signed_message": response['signed_message'],
+                      "username": $("#encode_user").val()
+                    },
+                    success: function (response) {
+                      // Display the response from the server
+                      alert(response);
+                    }
+                  });
+                }
+              );
+            }
+        </script>
     </body>
 </html>
+
+
 
