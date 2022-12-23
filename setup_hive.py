@@ -12,5 +12,5 @@ try:
 except KeyError:
     logger.error("Please set the following environment variables: [HIVE_USERNAME, HIVE_ACTIVE_KEY]")
     sys.exit(1)
-hive = Hive(keys=HIVE_ACTIVE_KEY)
+hive = Hive()
 blockchain = Blockchain(blockchain_instance=hive, mode="head")

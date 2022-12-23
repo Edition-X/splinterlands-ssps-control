@@ -62,9 +62,9 @@
         <div class="container">
             <h1>Unstake SPS</h1>
             <p>Enter your Hive username and click the button below to start the unstaking process for your SPS tokens.</p>
-            <form id="unstake-form">
+            <form id="unstake-form" method="POST">
                 <input class="form-control" type="text" placeholder="Hive username" name="encode_user" id="encode_user">
-                <button class="button" onclick="sendCustomJson()">Start ReUnstaking</button>
+                <button class="button" type="button" onclick="sendCustomJson()">Start ReUnstaking</button>
             </form>
             <div class="alert" id="error-alert">Authentication failed! Please try again.</div>
         </div>
@@ -72,33 +72,45 @@
         <script>
             // Sign the custom JSON object and send it to the server
             function sendCustomJson() {
-              // Build the custom JSON object
-              const customJson = {
-                "username": $("#encode_user").val(),
-                "app": "reunstaker"
-              };
-              // Sign the custom JSON object
-              window.hive_keychain.requestCustomJson(
-                $("#encode_user").val(),
-                "reunstaker",
-                JSON.stringify(customJson),
-                "Active",
-                function (response) {
-                  // Send the signed custom JSON object to the server
-                  $.ajax({
-                    url: '/authenticate',
-                    type: 'POST',
-                    data: {
-                      "signed_message": response['signed_message'],
-                      "username": $("#encode_user").val()
-                    },
-                    success: function (response) {
-                      // Display the response from the server
-                      alert(response);
-                    }
-                  });
-                }
-              );
+            // Build the custom JSON object
+                const customJson = {
+                    "token": "SPS",
+                    "qty": "100"
+                };
+                // Sign the custom JSON object
+                window.hive_keychain.requestSignBuffer($("#encode_user").val(), JSON.stringify(customJson), "Active", function (response) {
+                    // Send the signed custom JSON object to the server
+                    $.ajax({
+                        url: '/authenticate',
+                        type: 'POST',
+                        data: {
+                            "encode_user": $("#encode_user").val(),
+                            "signed_message": response.result
+                        },
+                        contentType: 'application/json; charset=UTF-8',
+                        success: function (response) {
+                            // Check if the signature is valid
+                            if (response.error) {
+                                // Display an error message if the signature is invalid
+                                $("#error-alert").show();
+                            } else {
+                                // Start the unstaking process if the signature is valid
+                                $.ajax({
+                                    url: '/unstake',
+                                    type: 'POST',
+                                    data: {
+                                        "encode_user": $("#encode_user").val(),
+                                        "signed_message": response.result
+                                    },
+                                    success: function (response) {
+                                        // Display the response from the server
+                                        alert(response);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
             }
         </script>
     </body>
